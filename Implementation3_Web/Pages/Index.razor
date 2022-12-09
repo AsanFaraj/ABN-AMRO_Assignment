@@ -1,0 +1,114 @@
+﻿@page "/"
+@using Domain.Models
+@using Implementation3_Web.Services
+@using Implementation3_Web.Models
+@using static Domain.Models.StatusObject
+@inject NamesService _namesService
+<PageTitle>Index</PageTitle>
+
+<h2>Start Calculating</h2>
+
+
+    <div>
+    <label>First Name:</label>
+    <input @bind="calculationRequest.FirstName" />
+    <br />
+    <label>Last Name:</label>
+    <input @bind="calculationRequest.LastName" />
+    <button @onclick="@(async () => await CalculateValues())">Calculate</button>
+
+</div>
+<br />
+
+<h2>Check status</h2>
+
+    <div>
+    <label>Check Status with Guid</label>
+    <input placeholder="Guid" @bind="enteredGuid" />
+    <button @onclick="@(async () => await GetStatusObject())">Check Status</button>
+
+    @if(statusObject is not null)
+    {
+        <p>Progress: @statusObject.Progress%</p>
+        <p style="color:@statusColor" >Status: @statusObject.StatusString</p>
+        <p>StartTime: @statusObject.StartTime.ToShortTimeString()</p>
+
+    }
+
+    <h4>Guids:</h4>
+    @if(statusObjectIds is not null)
+    {
+        <ul>
+        @foreach(var id in statusObjectIds)
+        {
+            <li>@id</li>
+        }
+        </ul>
+    }
+</div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Number</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(values is not null){
+            foreach (var value in values)
+            {
+                <tr>
+                    <td>@value.IndexNumber</td>
+                    <td>@value.IndexValue</td>
+                </tr>
+            } 
+           }
+        </tbody>
+    </table>
+
+@code{
+    List<CalculationValue> values;
+    CalculationRequest calculationRequest = new();
+    string enteredGuid = string.Empty;
+    static List<Guid> statusObjectIds = new();
+    StatusObject statusObject;
+    string statusColor;
+
+
+    //Calculate the values and add the GUID to the list
+    public async Task CalculateValues()
+    {
+        var guid = await _namesService.CalculateNames(calculationRequest);
+        statusObjectIds.Add(guid);
+    }
+
+
+    public async Task GetStatusObject()
+    {
+        var guid = Guid.Parse(enteredGuid);
+
+        statusObject = await _namesService.GetStatusObject(guid);
+
+        statusColor = statusObject.CalculationStatus switch
+        {
+            Status.Failed => "red",
+            Status.Running => "grey",
+            Status.Completed => "green",
+            _ => "orange"
+        };
+
+        if(statusObject.CalculationStatus == Status.Completed)
+        {
+            values = statusObject.CalculationValues;
+        }
+        else
+        {
+            values = Enumerable.Empty<CalculationValue>().ToList();
+        }
+    }
+
+
+
+
+}

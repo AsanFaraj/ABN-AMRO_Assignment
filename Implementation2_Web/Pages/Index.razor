@@ -1,0 +1,52 @@
+﻿@page "/"
+@using Domain.Models
+@using Implementation2_Web.Services
+@inject FizzBuzzService _fizzBuzzService
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+
+    <div>
+    <label>First Name:</label>
+    <input @bind="firstName" />
+    <br />
+    <label>Last Name:</label>
+    <input @bind="lastName" />
+    <button @onclick="@(async () => await CalculateValues())">Calculate</button>
+
+</div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Number</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(values is not null){
+            foreach (var value in values)
+            {
+                <tr>
+                    <td>@value.IndexNumber</td>
+                    <td>@value.IndexValue</td>
+                </tr>
+            } 
+           }
+        </tbody>
+    </table>
+
+@code{
+    List<CalculationValue> values;
+    string firstName = "";
+    string lastName = "";
+   
+
+    public async Task CalculateValues()
+    {
+        await _fizzBuzzService.CalculateFizzBuzzValues(firstName, lastName);
+        values = (await _fizzBuzzService.GetFizzBuzzValues()).ToList();
+    }
+
+
+}

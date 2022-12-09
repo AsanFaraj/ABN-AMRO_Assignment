@@ -1,0 +1,1 @@
+﻿CREATE SCHEMA [ABN-Amro_Assignment]
